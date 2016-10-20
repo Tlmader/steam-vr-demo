@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class WandController : MonoBehaviour
 {
@@ -9,7 +9,10 @@ public class WandController : MonoBehaviour
 	private SteamVR_Controller.Device controller { get { return SteamVR_Controller.Input((int)trackedObj.index); } }
 	private SteamVR_TrackedObject trackedObj;
 
-	private GameObject pickup;
+	HashSet<InteractableItem> objectsHoveringOver = new HashSet<InteractableItem>();
+
+	private InteractableItem closestItem;
+	private InteractableItem interactingItem;
 
 	// Use this for initialization
 	void Start()
@@ -24,25 +27,50 @@ public class WandController : MonoBehaviour
 		{
 			return;
 		}
-		if (controller.GetPressDown(gripButton) && pickup != null)
+		if (controller.GetPressDown(gripButton))
 		{
-			pickup.transform.parent = this.transform;
-			pickup.GetComponent<Rigidbody>().isKinematic = true;
+			float minDistance = float.MaxValue;
+			float distance = 0;
+			foreach (InteractableItem item in objectsHoveringOver)
+			{
+				distance = (item.transform.position - transform.position).sqrMagnitude;
+			}
+			if (distance < minDistance)
+			{
+				minDistance = distance;
+				closestItem = closestItem;
+			}
+			interactingItem = closestItem;
+			if (interactingItem)
+			{
+				if (interactingItem.IsInteracting())
+				{
+					interactingItem.EndInteraction(this);
+				}
+				interactingItem.BeginInteraction(this);
+			}
 		}
-		if (controller.GetPressUp(gripButton))
+		if (controller.GetPressUp(gripButton) && interactingItem != null)
 		{
-			pickup.transform.parent = null;
-			pickup.GetComponent<Rigidbody>().isKinematic = false;
+			interactingItem.EndInteraction(this);
 		}
 	}
 
 	private void OnTriggerEnter(Collider collider)
 	{
-		pickup = collider.gameObject;
+		InteractableItem collidedItem = collider.GetComponent<InteractableItem>();
+		if (collidedItem)
+		{
+			objectsHoveringOver.Add(collidedItem);
+		}
 	}
 
 	private void OnTriggerExit(Collider collider)
 	{
-		pickup = null; 
+		InteractableItem collidedItem = collider.GetComponent<InteractableItem>();
+		if (collidedItem)
+		{
+			objectsHoveringOver.Remove(collidedItem);
+		}
 	}
 }
