@@ -25,6 +25,7 @@ public class InteractableItem : MonoBehaviour
 		body = GetComponent<Rigidbody>();
 		interactionPoint = new GameObject().transform;
 		velocityFactor /= body.mass;
+		rotationFactor /= body.mass;
 	}
 
 	// Update is called once per frame
@@ -34,6 +35,15 @@ public class InteractableItem : MonoBehaviour
 		{
 			posDelta = attachedWand.transform.position - interactionPoint.position;
 			this.body.velocity = posDelta * velocityFactor * Time.fixedDeltaTime;
+
+			rotationDelta = attachedWand.transform.rotation * Quaternion.Inverse(interactionPoint.rotation);
+			rotationDelta.ToAngleAxis(out angle, out axis);
+
+			if (angle > 180)
+			{
+				angle -= 360;
+			}
+			this.body.angularVelocity = (Time.fixedDeltaTime * angle * axis) * rotationFactor;
 		}
 	}
 
