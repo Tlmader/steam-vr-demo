@@ -25,20 +25,21 @@ public class WandController : MonoBehaviour
 	{
 		if (controller == null)
 		{
+			Debug.Log("Controller not initialized");
 			return;
 		}
 		if (controller.GetPressDown(gripButton))
 		{
 			float minDistance = float.MaxValue;
-			float distance = 0;
+			float distance;
 			foreach (InteractableItem item in objectsHoveringOver)
 			{
 				distance = (item.transform.position - transform.position).sqrMagnitude;
-			}
-			if (distance < minDistance)
-			{
-				minDistance = distance;
-				closestItem = closestItem;
+				if (distance < minDistance)
+				{
+					minDistance = distance;
+					closestItem = item;
+				}
 			}
 			interactingItem = closestItem;
 			if (interactingItem)
